@@ -1,0 +1,16 @@
+{
+    "name": "ventusforge/neos-asset-import",
+    "license": "MIT",
+    "type": "neos-application",
+    "description": "CLi Asset-Importer for Neos",
+    "version": "0.0.1",
+    "require": {
+        "php": ">=8.0",
+        "neos/neos": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "VentusForge\\AssetImport\\": "Classes"
+        }
+    }
+}
