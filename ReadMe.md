@@ -23,3 +23,15 @@ Optional arguments:
 - `--copyright`: Copyright notice of the asset
 - `--filename`: "override-filename.jpg" :warning: the name must contain the file extension!
 - `--dry-run`: If true, the files will not be imported, but the command will output what would have been imported
+
+## Import all files in a directory
+
+```bash
+./flow assetimport:directory /data/Data/VideoImport
+```
+
+Optional arguments:
+
+- `--extension`: The extension of the files to import (e.g. "jpg", "png", "mp4", "mp3", "pdf")
+- `--dry-run`: If true, the files will not be imported, but the command will output what would have been imported
+- `--interactive`: If true, the command will ask for confirmation before importing each file

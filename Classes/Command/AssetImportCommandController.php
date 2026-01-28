@@ -9,7 +9,9 @@ use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\ResourceManagement\Exception;
 use Neos\Media\Exception\ThumbnailServiceException;
+use VentusForge\AssetImport\Exceptions\PathIsNoDirectory;
 use VentusForge\AssetImport\Service\AssetImportService;
+use VentusForge\AssetImport\Service\FileService;
 
 /**
  * Import resources as assets
@@ -18,6 +20,9 @@ class AssetImportCommandController extends CommandController
 {
     #[Flow\Inject]
     protected AssetImportService $assetImportService;
+
+    #[Flow\Inject]
+    protected FileService $fileService;
 
     /**
      * Import an asset from a given path or uri.
@@ -53,6 +58,49 @@ class AssetImportCommandController extends CommandController
             $this->outputLine('<success>Successfully imported file: %s</success>', [$resource]);
         } else {
             $this->outputLine('<success>Dry run: Would have imported file: %s</success>', [$resource]);
+        }
+    }
+
+    /**
+     * Import all files in a directory.
+     * 
+     * @param string $directory The directory to import the files from
+     * @param string|null $extension The extension of the files to import (e.g. "jpg", "png", "mp4", "mp3", "pdf")
+     * @param bool $dryRun If true, the files will not be imported, but the command will output what would have been imported
+     * @param bool $interactive If true, the command will ask for confirmation before importing each file
+     * @return void
+     */
+    public function directoryCommand(
+        string $directory,
+        ?string $extension = null,
+        bool $dryRun = false,
+        bool $interactive = false,
+    ): void {
+        try {
+            $files = $this->fileService->getFilesInDirectory($directory, $extension);
+        } catch (PathIsNoDirectory $e) {
+            $this->outputLine('<error>%s</error>', [$e->getMessage()]);
+            $this->sendAndExit(1);
+        }
+
+        if (empty($files)) {
+            $this->outputLine('<error>No files found in directory: %s</error>', [$directory]);
+            $this->sendAndExit(1);
+        }
+
+        $this->outputLine('<info>Found %s files in directory: %s</info>', [count($files), $directory]);
+
+        foreach ($files as $file) {
+            $import = $interactive ? $this->output->askConfirmation('<info>Confirm import of file: ' . $file . '? (y/n)</info> ', false) : true;
+            if (!$import) {
+                $this->outputLine('<success>Skipping file: %s</success>', [$file]);
+                continue;
+            }
+
+            $this->fileCommand(
+                resource: $file,
+                dryRun: $dryRun
+            );
         }
     }
 }

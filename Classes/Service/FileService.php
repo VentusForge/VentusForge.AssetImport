@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace VentusForge\AssetImport\Service;
 
 use Neos\Flow\Annotations as Flow;
+use VentusForge\AssetImport\Exceptions\PathIsNoDirectory;
 use VentusForge\AssetImport\Exceptions\UndetectedAssetTypeException;
 
 /**
@@ -48,5 +49,25 @@ class FileService
         }
 
         throw new UndetectedAssetTypeException($mimeType);
+    }
+
+    /**
+     * Get all files in a directory
+     *
+     * @param string $directory The directory to get the files from
+     * @param string|null $extension The extension of the files to get (e.g. "jpg", "png", "mp4", "mp3", "pdf")
+     * @throws PathIsNoDirectory If the directory does not exist
+     * @return string[] The files in the directory
+     */
+    public function getFilesInDirectory(
+        string $directory,
+        ?string $extension = null,
+    ): array
+    {
+        if (!is_dir($directory)) {
+            throw new PathIsNoDirectory($directory);
+        }
+
+        return glob($directory . '/*.' . ($extension ?? '*'));
     }
 }
