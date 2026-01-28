@@ -16,60 +16,43 @@ use VentusForge\AssetImport\Service\AssetImportService;
  */
 class AssetImportCommandController extends CommandController
 {
-    /**
-     * @Flow\Inject
-     * @var AssetImportService
-     */
+    #[Flow\Inject]
     protected AssetImportService $assetImportService;
 
     /**
-     * Import an asset from a given path.
+     * Import an asset from a given path or uri.
      *
-     * @param string $resource the path or the uri of the asset to import
-     * @param string $assetType
-     * @param string $title the title of the asset
-     * @param string $caption the caption of the asset
-     * @param string $copyrightNotice the copyright notice
+     * @param string $resource The path or the uri of the asset to import
+     * @param string|null $title the title of the asset
+     * @param string|null $caption the caption of the asset
+     * @param string|null $copyrightNotice the copyright notice
      * @param string|null $filename override the filename
+     * @param bool $dryRun If true, the file will not be imported, but the command will output what would have been imported
      * @return void
      * @throws Exception
      * @throws IllegalObjectTypeException
      * @throws ThumbnailServiceException
      */
-    public function importCommand(
-        string  $resource,
-        string  $assetType,
-        string $title = '',
-        string $caption = '',
-        string $copyrightNotice = '',
+    public function fileCommand(
+        string $resource,
+        ?string $title = null,
+        ?string $caption = null,
+        ?string $copyrightNotice = null,
         ?string $filename = null,
+        bool $dryRun = false,
     ): void {
-        if (filter_var($resource, FILTER_VALIDATE_URL) && !$filename) {
-            $this->outputLine('<error>You are importing a remote asset. Please define a filename</error>');
-            $this->sendAndExit(1);
-        } elseif (!filter_var($resource, FILTER_VALIDATE_URL) && !file_exists($resource)) {
+        $isRemote = filter_var($resource, FILTER_VALIDATE_URL);
+
+        if (!$isRemote && !file_exists($resource)) {
             $this->outputLine('<error>The given path does not exist.</error>');
             $this->sendAndExit(1);
         }
 
-        switch ($assetType) {
-            case 'image':
-                $this->assetImportService->importImage($resource, $title, $caption, $copyrightNotice, $filename);
-                break;
-            case 'video':
-                $this->assetImportService->importVideo($resource, $title, $caption, $copyrightNotice, $filename);
-                break;
-            case 'audio':
-                $this->assetImportService->importAudio($resource, $title, $caption, $copyrightNotice, $filename);
-                break;
-            case 'document':
-                $this->assetImportService->importDocument($resource, $title, $caption, $copyrightNotice, $filename);
-                break;
-            default:
-                $this->outputLine('<error>The given asset type is not supported.</error>');
-                $this->sendAndExit(1);
+        if (!$dryRun) {
+            $this->assetImportService->import($resource, $title, $caption, $copyrightNotice, $filename);
+            $this->outputLine('<success>Successfully imported file: %s</success>', [$resource]);
+        } else {
+            $this->outputLine('<success>Dry run: Would have imported file: %s</success>', [$resource]);
         }
-
-        $this->outputLine('<success>Asset imported.</success>');
     }
 }

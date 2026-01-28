@@ -19,52 +19,92 @@ use Neos\Media\Domain\Model\Video;
 use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Media\Domain\Service\ThumbnailService;
 use Neos\Media\Exception\ThumbnailServiceException;
+use VentusForge\AssetImport\Exceptions\UnableToImportResource;
+use VentusForge\AssetImport\Exceptions\UndetectedAssetTypeException;
 
 /**
  * The Asset Import Service
- *
- * @Flow\Scope("singleton")
  */
+
+#[Flow\Scope("singleton")]
 class AssetImportService
 {
-    /**
-     * @Flow\Inject
-     * @var ResourceManager
-     */
-    protected $resourceManager;
+    #[Flow\Inject]
+    protected ResourceManager $resourceManager;
 
-    /**
-     * @Flow\Inject
-     * @var AssetRepository
-     */
-    protected $assetRepository;
+    #[Flow\Inject]
+    protected AssetRepository $assetRepository;
 
-    /**
-     * @Flow\Inject
-     * @var ThumbnailService
-     */
-    protected $thumbnailService;
+    #[Flow\Inject]
+    protected ThumbnailService $thumbnailService;
 
-    /**
-     * @Flow\Inject
-     * @var PersistenceManagerInterface
-     */
-    protected $persistenceManager;
+    #[Flow\Inject]
+    protected PersistenceManagerInterface $persistenceManager;
 
-    /**
-     * @Flow\InjectConfiguration(path="asyncThumbnails", package="Neos.Media")
-     * @var bool
-     */
+    #[Flow\Inject]
+    protected FileService $fileService;
+
+    #[Flow\Inject]
+    protected RemoteFileService $remoteFileService;
+
+    #[Flow\InjectConfiguration(path: "asyncThumbnails", package: "Neos.Media")]
     protected bool $asyncThumbnails;
 
+    /**
+     * Import a resource
+     *
+     * @param string $path The path of the resource
+     * @param string|null $title The title of the resource
+     * @param string|null $caption The caption of the resource
+     * @param string|null $copyrightNotice The copyright notice of the resource
+     * @param string|null $filename The filename of the resource
+     * @throws UnableToImportResource If the resource could not be imported
+     * @throws UndetectedAssetTypeException If the asset type of the resource could not be detected
+     * @return void
+     */
+    public function import(
+        string $path,
+        ?string $title = null,
+        ?string $caption = null,
+        ?string $copyrightNotice = null,
+        ?string $filename = null,
+    ): void
+    {
+        $isRemote = filter_var($path, FILTER_VALIDATE_URL);
+        if ($isRemote) {
+            $fileInfo = $this->remoteFileService->getFileInfo($path);
+            $mimeType = $fileInfo['mimeType'];
+            $filename = $fileInfo['filename'];
+        } else {
+            $mimeType = $this->fileService->getMimeType($path);
+        }
+
+        $assetType = $this->fileService->getAssetType($mimeType);
+        switch ($assetType) {
+            case 'image':
+                $this->importImage($path, $title, $caption, $copyrightNotice, $filename);
+                return;
+            case 'video':
+                $this->importVideo($path, $title, $caption, $copyrightNotice, $filename);
+                return;
+            case 'audio':
+                $this->importAudio($path, $title, $caption, $copyrightNotice, $filename);
+                return;
+            case 'document':
+                $this->importDocument($path, $title, $caption, $copyrightNotice, $filename);
+                return;
+        }
+
+        throw new UnableToImportResource($path);
+    }
 
     /**
      * Import an image file
      *
      * @param string $resource
-     * @param string $title
-     * @param string $caption
-     * @param string $copyrightNotice
+     * @param string|null $title
+     * @param string|null $caption
+     * @param string|null $copyrightNotice
      * @param string|null $filename
      * @return void
      * @throws ThumbnailServiceException
@@ -73,9 +113,9 @@ class AssetImportService
      */
     public function importImage(
         string  $resource,
-        string $title = '',
-        string $caption = '',
-        string $copyrightNotice = '',
+        ?string $title = null,
+        ?string $caption = null,
+        ?string $copyrightNotice = null,
         ?string $filename = null,
     ): void
     {
@@ -85,9 +125,9 @@ class AssetImportService
         }
 
         $image = new Image($imageResource);
-        $image->setTitle($title);
-        $image->setCaption($caption);
-        $image->setCopyrightNotice($copyrightNotice);
+        $image->setTitle($title ?? '');
+        $image->setCaption($caption ?? '');
+        $image->setCopyrightNotice($copyrightNotice ?? '');
 
         $imageVariant = new ImageVariant($image);
 
@@ -100,9 +140,9 @@ class AssetImportService
      * Import a video file
      *
      * @param string $resource
-     * @param string $title
-     * @param string $caption
-     * @param string $copyrightNotice
+     * @param string|null $title
+     * @param string|null $caption
+     * @param string|null $copyrightNotice
      * @param string|null $filename
      * @return void
      * @throws Exception
@@ -111,9 +151,9 @@ class AssetImportService
      */
     public function importVideo(
         string  $resource,
-        string $title = '',
-        string $caption = '',
-        string $copyrightNotice = '',
+        ?string $title = null,
+        ?string $caption = null,
+        ?string $copyrightNotice = null,
         ?string $filename = null,
     ): void
     {
@@ -123,9 +163,9 @@ class AssetImportService
         }
 
         $video = new Video($videoResource);
-        $video->setTitle($title);
-        $video->setCaption($caption);
-        $video->setCopyrightNotice($copyrightNotice);
+        $video->setTitle($title ?? '');
+        $video->setCaption($caption ?? '');
+        $video->setCopyrightNotice($copyrightNotice ?? '');
 
         $this->assetRepository->add($video);
         $this->generateThumbnails($video);
@@ -135,9 +175,9 @@ class AssetImportService
      * Import an audio file
      *
      * @param string $resource
-     * @param string $title
-     * @param string $caption
-     * @param string $copyrightNotice
+     * @param string|null $title
+     * @param string|null $caption
+     * @param string|null $copyrightNotice
      * @param string|null $filename
      * @return void
      * @throws Exception
@@ -146,9 +186,9 @@ class AssetImportService
      */
     public function importAudio(
         string  $resource,
-        string $title = '',
-        string $caption = '',
-        string $copyrightNotice = '',
+        ?string $title = null,
+        ?string $caption = null,
+        ?string $copyrightNotice = null,
         ?string $filename = null,
     ): void
     {
@@ -158,9 +198,9 @@ class AssetImportService
         }
 
         $audio = new Audio($audioResource);
-        $audio->setTitle($title);
-        $audio->setCaption($caption);
-        $audio->setCopyrightNotice($copyrightNotice);
+        $audio->setTitle($title ?? '');
+        $audio->setCaption($caption ?? '');
+        $audio->setCopyrightNotice($copyrightNotice ?? '');
 
         $this->assetRepository->add($audio);
         $this->generateThumbnails($audio);
@@ -170,9 +210,9 @@ class AssetImportService
      * Import a document file
      *
      * @param string $resource
-     * @param string $title
-     * @param string $caption
-     * @param string $copyrightNotice
+     * @param string|null $title
+     * @param string|null $caption
+     * @param string|null $copyrightNotice
      * @param string|null $filename
      * @return void
      * @throws Exception
@@ -181,9 +221,9 @@ class AssetImportService
      */
     public function importDocument(
         string  $resource,
-        string $title = '',
-        string $caption = '',
-        string $copyrightNotice = '',
+        ?string $title = null,
+        ?string $caption = null,
+        ?string $copyrightNotice = null,
         ?string $filename = null,
     ): void
     {
@@ -193,9 +233,9 @@ class AssetImportService
         }
 
         $document = new Document($documentResource);
-        $document->setTitle($title);
-        $document->setCaption($caption);
-        $document->setCopyrightNotice($copyrightNotice);
+        $document->setTitle($title ?? '');
+        $document->setCaption($caption ?? '');
+        $document->setCopyrightNotice($copyrightNotice ?? '');
 
         $this->assetRepository->add($document);
         $this->generateThumbnails($document);

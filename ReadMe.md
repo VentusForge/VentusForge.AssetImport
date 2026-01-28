@@ -10,15 +10,16 @@ composer require ventusforge/neos-asset-import
 
 ## Usage
 
-You have to set the type of the imported asset. The possible types are `image`, `video`, `audio` and `document`.
+### Import a single file
 
 ```bash
-./flow assetimport:import
-  --resource "/path/to/resource"
-  --title "Title of the asset"
-  --caption "Caption of the asset"
-  --copyright-notice "copyright notice of the asset"
-  --filename "override-filename.png"
+./flow assetimport:file --resource "/path/to/resource.jpg"
 ```
 
-NOTE: You have to set the `filename` argument if you are importing a remote resource.
+Optional arguments:
+
+- `--title`: Title of the asset
+- `--caption`: Caption of the asset
+- `--copyright`: Copyright notice of the asset
+- `--filename`: "override-filename.jpg" :warning: the name must contain the file extension!
+- `--dry-run`: If true, the files will not be imported, but the command will output what would have been imported

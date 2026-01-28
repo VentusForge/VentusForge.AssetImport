@@ -1,0 +1,26 @@
+VentusForge:
+  AssetImport:
+    mimeTypes:
+      video/*: video
+      image/*: image
+      audio/*: audio
+      document/*: document
+      application/pdf: document
+      application/vnd.openxmlformats-officedocument.wordprocessingml.document: document
+      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: document
+      application/vnd.openxmlformats-officedocument.presentationml.presentation: document
+      application/vnd.oasis.opendocument.text: document
+      application/vnd.oasis.opendocument.spreadsheet: document
+      application/vnd.oasis.opendocument.presentation: document
+      application/zip: document
+      application/rar: document
+      application/7z: document
+      application/tar: document
+      application/tgz: document
+      application/tar.gz: document
+      text/plain: document
+      text/csv: document
+      application/vnd.ms-excel: document
+      application/vnd.ms-powerpoint: document
+      application/msword: document
+      application/rtf: document
