@@ -27,7 +27,9 @@ class FileService
      */
     public function getMimeType(string $resource): string
     {
-        return mime_content_type($resource);
+        $detector = new \League\MimeTypeDetection\FinfoMimeTypeDetector();
+
+        return $detector->detectMimeTypeFromPath($resource);
     }
 
     /**

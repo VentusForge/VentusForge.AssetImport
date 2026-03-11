@@ -6,7 +6,8 @@
     "version": "1.0.0",
     "require": {
         "php": ">=8.0",
-        "neos/neos": "*"
+        "neos/neos": "*",
+        "league/mime-type-detection": "~1.16.0"
     },
     "autoload": {
         "psr-4": {
