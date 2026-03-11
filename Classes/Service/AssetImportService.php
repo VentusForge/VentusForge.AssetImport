@@ -79,7 +79,7 @@ class AssetImportService
             $mimeType = $this->fileService->getMimeType($path);
         }
 
-        $assetType = $this->fileService->getAssetType($mimeType);
+        $assetType = $this->fileService->getAssetType($mimeType, $path);
         switch ($assetType) {
             case 'image':
                 $this->importImage($path, $title, $caption, $copyrightNotice, $filename);

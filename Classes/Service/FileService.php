@@ -37,7 +37,7 @@ class FileService
      * @throws UndetectedAssetTypeException If the mime type does not match to the asset types
      * @return string The asset type of the resource
      */
-    public function getAssetType(string $mimeType): string
+    public function getAssetType(string $mimeType, string $path): string
     {
         if (array_key_exists($mimeType, $this->mimeTypes)) {
             return $this->mimeTypes[$mimeType];
@@ -48,7 +48,7 @@ class FileService
             return $this->mimeTypes[$prefix];
         }
 
-        throw new UndetectedAssetTypeException($mimeType);
+        throw new UndetectedAssetTypeException($path, $mimeType);
     }
 
     /**
