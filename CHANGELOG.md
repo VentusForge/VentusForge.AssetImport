@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/VentusForge/VentusForge.AssetImport/compare/1.0.0...1.1.0) (2026-03-11)
+
+
+### Features
+
+* show the mime type and path in exception ([5750305](https://github.com/VentusForge/VentusForge.AssetImport/commit/57503058fa0f94679c10d8b563f4dee0a7b89ce7))
+* use MimeTypeDetector to get the mimetype ([dd5f30c](https://github.com/VentusForge/VentusForge.AssetImport/commit/dd5f30cfde1d051462944f7bb2e402bf9a707366))
+
 ## [1.0.0](https://github.com/VentusForge/VentusForge.AssetImport/compare/0.1.0...1.0.0) (2026-01-28)
 
 
